@@ -1,53 +1,180 @@
-import express from 'express';
+import express from "express";
+import mongoose from "mongoose";
+import OrderModel from "../models/orders.model.js";
+import ProductsModel from "../models/products.model.js";
+import constants from "./../common/constants.js";
 
-import ordersModel from '../models/orders.model.js';
+const ORDER_STATUS = constants.ORDER_STATUS;
 
-
+const ObjectId = mongoose.Types.ObjectId;
 const router = express.Router({ mergeParams: true });
 
+const getObjectIds = (items) => {
+  return items.map((id) => new ObjectId(id));
+};
+router.put("/:order_id/status", async (req, res) => {
+  try {
+    const { order_id } = req.params;
+    if (!mongoose.isValidObjectId(order_id)) {
+      return res.status(400).json({ message: `order_id is not a valid id` });
+    }
+    const { delivery_status } = req.body;
+    if (!ORDER_STATUS.includes(delivery_status)) {
+      return res
+        .status(400)
+        .json({ message: `delivery_status is not a valid status` });
+    }
 
-
-router.post('/orders', async (req, res) => {
-    try {
-        const newOrder = new ordersModel(req.body);
-        const savedOrder = await newOrder.save();
-        res.status(201).json(savedOrder);
-      } catch (err) {
-        res.status(400).json({ error: err.message });
-      }
-
+    const updatedOrder = await OrderModel.findByIdAndUpdate(
+      order_id,
+      { status: delivery_status },
+      { new: true }
+    );
+    const productIds = getObjectIds(updatedOrder.items);
+    const productsData = await ProductsModel.find({
+      _id: productIds,
+    });
+    res.json({
+      items: productsData,
+      status: updatedOrder.status,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update delivery status" });
+  }
 });
 
-
-router.get('/orders', async (req, res) => {
-    try {
-      const orders = await ordersModel.find().sort({ createdAt: -1 });
-      res.json(orders);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
+router.post("/", async (req, res) => {
+  try {
+    const { items } = req.body;
+    if (!items) {
+      return res.status(400).json({ message: "items is required" });
     }
-  });
+    if (!Array.isArray(items)) {
+      return res
+        .status(400)
+        .json({ message: "items must be an array of product ids" });
+    }
+    if (!items.length) {
+      return res.status(400).json({ message: "items array can not be empty" });
+    }
 
-  router.put('/:id', async (req, res) => {
-    try {
-      const updatedOrder = await ordersModel.findByIdAndUpdate(
-        req.params.id,
-        { status: req.body.status },
+    const itemObjectIds = items.map((item) => {
+      if (!mongoose.isValidObjectId(item.id)) {
+        return res
+          .status(400)
+          .json({ message: `${item.id} is not a valid id` });
+      }
+      return new ObjectId(item.id);
+    });
+
+    let productsData = await ProductsModel.find({
+      _id: {
+        $in: itemObjectIds,
+      },
+    });
+
+    productsData = productsData.map((product) => product.toJSON());
+
+    if (productsData.length !== items.length) {
+      return res
+        .status(400)
+        .json({ message: `some of the products does not exist` });
+    }
+
+    let productQtyMapping = {};
+    let updatedProduct = items.map((item) => {
+      productQtyMapping[item.id] = item.quantity;
+      return ProductsModel.findOneAndUpdate(
+        {
+          _id: new ObjectId(item.id),
+        },
+        { $inc: { stock: -item.quantity } }, // use +x to increase
         { new: true }
       );
-      res.json(updatedOrder);
-    } catch (err) {
-      res.status(400).json({ error: err.message });
-    }
-  });
+    });
 
-  router.delete('/:id', async (req, res) => {
-    try {
-      await ordersModel.findByIdAndDelete(req.params.id);
-      res.json({ message: 'Order deleted successfully' });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
+    productsData = productsData.map((product) => {
+      delete product.stock;
+      delete product.rating;
+      const productData = {
+        ...product,
+        quantity: productQtyMapping[product._id.toString()],
+      };
+      return productData;
+    });
+
+    await Promise.all(updatedProduct);
+
+    const payload = {
+      items,
+      status: "processing",
+    };
+    const newOrder = new OrderModel(payload);
+    const savedOrder = await newOrder.save();
+    res.status(200).json({
+      items: productsData,
+      status: savedOrder.status,
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.get("/", async (req, res) => {
+  try {
+    const orders = await OrderModel.find().sort({ createdAt: -1 });
+    if (!orders) {
+      return res.json({
+        orders: [],
+      });
     }
-  });
+    let orderData = [];
+    for (const order of orders) {
+      const itemsIds = getObjectIds(order.items);
+      const products = await ProductsModel.find({
+        _id: {
+          $in: itemsIds,
+        },
+      });
+      orderData.push({
+        items: products,
+        status: order.status,
+      });
+    }
+    res.json({
+      orders: orderData,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  try {
+    const updatedOrder = await OrderModel.findByIdAndUpdate(
+      req.params.id,
+      { status: req.body.status },
+      { new: true }
+    );
+    const product = await ProductsModel.find({
+      _id: new ObjectId(updatedOrder.items[0]),
+    });
+    res.json({
+      ...product,
+      status: updatedOrder.status,
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    await OrderModel.findByIdAndDelete(req.params.id);
+    res.json({ message: "Order deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;

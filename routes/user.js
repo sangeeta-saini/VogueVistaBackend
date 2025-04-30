@@ -1,68 +1,51 @@
-import express from 'express';
-import UserModel from '../models/user.model.js';
-import bcrypt from "bcrypt";
-import session from 'express-session';
-import  passport from 'passport';
-import LocalStrategy from  'passport-local'
-const saltRounds = 10;
+import express from "express";
+import UserModel from "../models/user.model.js";
+import session from "express-session";
+import passport from "passport";
+import LocalStrategy from "passport-local";
+
 const router = express.Router();
 
-router.use(session({
-  secret: 'keyboard cat',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false , maxAge:60000 }
-}))
+// Session middleware
+router.use(
+  session({
+    secret: "keyboard cat",
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false, maxAge: 60000 },
+  })
+);
 
+// Initialize passport
 router.use(passport.initialize());
 router.use(passport.session());
- 
-passport.use(new LocalStrategy(
-  { usernameField: 'email' }, 
-  async function(email, password, done) {
-    console.log("--------",email , password)
+
+// Passport local strategy
+passport.use(
+  new LocalStrategy({ usernameField: "email" }, async function (
+    email,
+    password,
+    done
+  ) {
     try {
       const user = await UserModel.findOne({ email: email });
-      console.log("--------user",user ,user.password)
-      //  let createshash = await bcrypt.hash(password, saltRounds);
-      //  console.log(createshash)
       if (!user) {
-        return done(null, false, { message: 'User does not exist.' });
+        return done(null, false, { message: "User does not exist." });
       }
 
-      const isMatch = await bcrypt.compare(password, user.password);
-      console.log(isMatch)
-      if (!isMatch) {
-        return done(null, false, { message: 'Incorrect password.' });
+      // Password comparison without hashing
+      if (user.password !== password) {
+        return done(null, false, { message: "Incorrect password." });
       }
-      
 
-      return done(null, user); // ✅ correct match
-      // const isMatch = bcrypt.compare(password,user.password, function(err , result){
-      //   console.log("result2345" ,err , result)
-      //   if(err){
-      //     console.log("error from if block",err)
-      //   }
-      //   if(result){
-      //     console.log("result from" , result)
-      //   }else{
-      //     return done (null,false, {message:"incorrect password"})
-      //   }
-
-      // });
-
-      // console.log(isMatch)
-      // if (!isMatch) {
-      //   return done(null, false, { message: 'Incorrect password.' });
-      // }
-      // return done(null, user);
+      return done(null, user); // User found and password matches
     } catch (err) {
-      return done(err);
+      return done(err); // If an error occurs, pass it to the done() callback
     }
-  }
-));
+  })
+);
 
-
+// Passport serialization and deserialization
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
@@ -76,96 +59,91 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-
-
+// Helper function to validate email format
 function validateEmail(email) {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
 }
 
-router.post('/login',passport.authenticate('local' ,{
-  successRedirect: '/dashboard',
-  failureRedirect: '/login',
-  // failureFlash: true
-}), 
-  // try {
-  //   const { email, password } = req.body;
+// Login route
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
 
-    
-  //   if (!email || !password) {
-  //     return res.status(400).json({ message: "Email and password are required." });
-  //   }
-    
-  //   const user = await UserModel.findOne({ email: email });
-  //   if (!user) {
-  //     return res.status(404).json({ message: "User does not exist." });
-  //   }
+  if (!email) {
+    return res.status(400).json({
+      message: {
+        email: "Email is required",
+      },
+    });
+  }
+  if (!validateEmail(email)) {
+    return res.status(400).json({
+      message: {
+        email: "Invalid email",
+      },
+    });
+  }
 
-  //   // if (!user.password) {
-  //   //   return res.status(500).json({ message: "Stored password not found for user." });
-  //   // }
+  if (!password) {
+    return res.status(400).json({
+      message: {
+        password: "Password is required",
+      },
+    });
+  }
 
-  //   const isPasswordCorrect = await bcrypt.compare(password, user.password);
-  //   if (!isPasswordCorrect) {
-  //     return res.status(401).json({ message: "Incorrect password." });
-  //   }
+  const user = await UserModel.findOne({ email });
 
-    
-   
-  //   res.status(200).json({ message: "Login successful" });
+  if (!user) {
+    return res.status(400).json({ message: "User not found" });
+  }
 
-  // } catch (error) {
-  //   console.error("Login error:", error);
-  //   res.status(500).json({ message: "An error occurred during login." });
-  // }
+  if (user.password !== password) {
+    return res
+      .status(400)
+      .json({ message: { password: "Password is incorrect" } });
+  }
 
-  // res.redirect('/')
-);
+  return res.json(user);
+});
 
+// Signup route
+router.post("/signup", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-
-
-
-
-router.post('/signup' , async (req , res)=>{
-    console.log(req.body)
-   
-    try{
-      
-      const { name , email, password} = req.body;
-
-      if (!name) {
-        return res.status(401).json({ message: "Name is required." });
-      } 
-
-      if (!validateEmail(email)) {
-        return res.status(400).json({ message: "Invalid email format." });
-      }
-
-      if (!password || password.length < 7) {
-        return res.status(400).json({ message: "Password must be at least 7 characters long." });
-      }
-  
-      const user = await UserModel.findOne({email})
-      console.log("fgthun",user)
-      if(user){
-        return res.status(400).json({message:"user already exist with this email id"})
-      }
-
-      let hash = await bcrypt.hash(password, saltRounds);
-  
-      await UserModel.create({
-        name,
-        email,
-        password: hash,
-      });
-      res.status(200).json({ message: "Signup successful" });
-
-  
-    }catch(error){
-        console.log(error)
-        res.status(500).json({ message: "Internal Server Error" });
+    if (!name) {
+      return res.status(401).json({ message: "Name is required." });
     }
-})
+
+    if (!validateEmail(email)) {
+      return res.status(400).json({ message: "Invalid email format." });
+    }
+
+    if (!password || password.length < 7) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 7 characters long." });
+    }
+
+    const user = await UserModel.findOne({ email });
+    if (user) {
+      return res
+        .status(400)
+        .json({ message: "User already exists with this email ID." });
+    }
+
+    await UserModel.create({
+      name,
+      email,
+      password, // storing plain text password
+    });
+
+    res.status(200).json({ message: "Signup successful" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 export default router;
