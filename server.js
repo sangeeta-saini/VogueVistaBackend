@@ -15,6 +15,9 @@ import wishlistdata from "./routes/products.js";
 import Begdata from "./routes/bagproducts.js";
 import Migration from "./routes/migrate.js";
 import OrdersEx from "./routes/ordersEx.js";
+import CategoryRoutes from "./routes/category.js";
+import BrandRoutes from "./routes/brand.js";
+
 import OrdersRoutes from "./routes/orders.js";
 
 import path from "path";
@@ -42,6 +45,9 @@ app.use("/wish", wishlistdata);
 // app.use("/cart", Begdata);
 app.use("/grate", Migration);
 app.use("/orderdetails", OrdersEx);
+app.use("/categories", CategoryRoutes);
+app.use("/brands", BrandRoutes);
+
 const dbURL = "mongodb://localhost:27017/dbconnect";
 mongoose
   .connect(dbURL)

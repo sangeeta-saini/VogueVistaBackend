@@ -19,7 +19,7 @@ router.post("/migrate", async (req, res) => {
           name: product.title,
           description: product.description,
           brand: product.brand,
-          price: product.price,
+          price: product.price * 80, // as prices are in $
           categories: product.tags,
           stock: 100,
           rating: product.rating,

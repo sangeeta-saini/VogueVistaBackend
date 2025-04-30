@@ -1,10 +1,11 @@
 import express from "express";
+import CONSTANTS from "../common/constants.js";
 
 const router = express.Router({ mergeParams: true });
 
-router.get("/category", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const category = c;
+    res.json({ items: CONSTANTS.CATEGORIES });
   } catch (error) {}
 });
 

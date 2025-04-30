@@ -70,20 +70,28 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.delete("/:userId/:productId", async (req, res) => {
+router.delete("/:productId", async (req, res) => {
   try {
-    const wishlist = await WishlistSchema.findOne({
-      userId: req.params.userId,
+    const { user_id } = req.headers;
+    let wishlist = await WishlistSchema.findOne({
+      userId: user_id,
     });
 
     if (!wishlist) return res.status(404).json({ error: "Wishlist not found" });
 
-    wishlist.items = wishlist.items.filter(
-      (item) => item.productId !== req.params.productId
+    wishlist = wishlist.toJSON();
+    wishlist.items = wishlist.items.filter((id) => id !== req.params.productId);
+    const updatedData = await WishlistSchema.findOneAndUpdate(
+      { userId: user_id },
+      {
+        items: wishlist.items,
+      },
+      {
+        new: true,
+      }
     );
-    await wishlist.save();
 
-    res.json(wishlist);
+    res.json(updatedData);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
