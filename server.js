@@ -31,6 +31,7 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
+app.use("/brands", BrandRoutes);
 
 app.use("/user", UserRoutes);
 app.use("/products", ProductRoutes);
@@ -43,10 +44,9 @@ app.use("/address", AddressRoutes);
 app.use("/detail", ProfileRoutes);
 app.use("/wish", wishlistdata);
 // app.use("/cart", Begdata);
-app.use("/grate", Migration);
+app.use("/migrate", Migration);
 app.use("/orderdetails", OrdersEx);
 app.use("/categories", CategoryRoutes);
-app.use("/brands", BrandRoutes);
 
 const dbURL = "mongodb://localhost:27017/dbconnect";
 mongoose
