@@ -49,7 +49,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:category", async (req, res) => {
+router.get("/category/:category", async (req, res) => {
   try {
     const { category } = req.params;
     const page = parseInt(req.query?.page || 0) || 1;

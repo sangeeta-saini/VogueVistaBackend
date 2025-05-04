@@ -12,15 +12,13 @@ import WishlistRoutes from "./routes/wishlist.js";
 import AddressRoutes from "./routes/address.js";
 import ProfileRoutes from "./routes/edits.js";
 import wishlistdata from "./routes/products.js";
-import Begdata from "./routes/bagproducts.js";
+
 import Migration from "./routes/migrate.js";
-import OrdersEx from "./routes/ordersEx.js";
+
 import CategoryRoutes from "./routes/category.js";
 import BrandRoutes from "./routes/brand.js";
 
 import OrdersRoutes from "./routes/orders.js";
-
-import path from "path";
 
 const port = process.env.PORT || 8000;
 import mongoose from "mongoose";
@@ -43,9 +41,9 @@ app.use("/wishlist", WishlistRoutes);
 app.use("/address", AddressRoutes);
 app.use("/detail", ProfileRoutes);
 app.use("/wish", wishlistdata);
-// app.use("/cart", Begdata);
+
 app.use("/migrate", Migration);
-app.use("/orderdetails", OrdersEx);
+
 app.use("/categories", CategoryRoutes);
 
 const dbURL = "mongodb://localhost:27017/dbconnect";
