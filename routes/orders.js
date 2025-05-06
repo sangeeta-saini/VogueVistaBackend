@@ -1,6 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
-import OrderModel from "../models/orders.model.js";
+import OrderModel from "../models/order.model.js";
 import ProductsModel from "../models/products.model.js";
 import constants from "./../common/constants.js";
 
