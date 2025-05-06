@@ -8,7 +8,10 @@ const BagItemSchema = new mongoose.Schema({
 });
 
 const BagSchema = new mongoose.Schema({
-  userId: String,
+  userId: {
+    type: String,
+    required: true,
+  },
   items: [BagItemSchema],
 });
 

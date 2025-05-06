@@ -12,7 +12,7 @@ import WishlistRoutes from "./routes/wishlist.js";
 import AddressRoutes from "./routes/address.js";
 import ProfileRoutes from "./routes/edits.js";
 import wishlistdata from "./routes/products.js";
-import PlaceOrder from "./routes/placeOrder.js";
+import PlaceOrdersRoutes from "./routes/placeOrder.js";
 import Migration from "./routes/migrate.js";
 
 import CategoryRoutes from "./routes/category.js";
@@ -34,7 +34,7 @@ app.use("/brands", BrandRoutes);
 app.use("/user", UserRoutes);
 app.use("/products", ProductRoutes);
 app.use("/order", OrdersRoutes);
-app.use("/place", OrdersRoutes);
+app.use("/place", PlaceOrdersRoutes);
 
 app.use("/cart", AddBagRoutes);
 app.use("/filter", FilterProductRoutes);

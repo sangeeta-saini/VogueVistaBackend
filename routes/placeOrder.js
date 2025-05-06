@@ -7,10 +7,13 @@ const router = express.Router({ mergeParams: true });
 // POST /orders/place
 router.post("/", async (req, res) => {
   try {
-    const { userId, items, shippingAddress, paymentMethod } = req.body;
+    const { user_id } = req.headers; // getting userId from headers
+    const { items, shippingAddress, paymentMethod } = req.body;
+    console.log("Received user_id:", user_id);
 
+    // Validate required fields
     if (
-      !userId ||
+      !user_id ||
       !items ||
       items.length === 0 ||
       !shippingAddress ||
@@ -21,17 +24,17 @@ router.post("/", async (req, res) => {
 
     // Create and save the order
     const order = new OrderModel({
-      userId,
+      userId: user_id,
       items,
       shippingAddress,
       paymentMethod,
-      createdAt: new Date(),
+      orderDate: new Date(),
     });
 
     await order.save();
 
-    // Clear the user's cart only
-    await BagModel.deleteMany({ userId });
+    // Clear the user's cart
+    await BagModel.deleteMany({ userId: user_id });
 
     res.status(201).json({ message: "Order placed successfully" });
   } catch (err) {

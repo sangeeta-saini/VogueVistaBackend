@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 const schema = mongoose.Schema;
 
 const OrderSchema = new schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userId: {
+    type: String,
+    required: true,
+  },
   items: [
     {
       productId: String,
@@ -11,16 +14,8 @@ const OrderSchema = new schema({
       quantity: Number,
     },
   ],
-  shippingAddress: {
-    name: String,
-    typeOfAddress: String,
-    address: String,
-    street: String,
-    city: String,
-    state: String,
-    pincode: String,
-    mobile: String,
-  },
+  shippingAddress: { type: String, required: true },
+
   paymentMethod: { type: String, required: true },
   orderDate: { type: Date, default: Date.now },
   status: {
