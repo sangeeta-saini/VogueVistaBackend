@@ -5,6 +5,10 @@ const BagItemSchema = new mongoose.Schema({
   productId: String,
   price: Number,
   quantity: Number,
+  images: {
+    type: Array,
+    default: [],
+  },
 });
 
 const BagSchema = new mongoose.Schema({

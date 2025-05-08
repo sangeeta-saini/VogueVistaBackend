@@ -12,6 +12,10 @@ const OrderSchema = new schema({
       name: String,
       price: Number,
       quantity: Number,
+      images: {
+        type: Array,
+        default: [],
+      },
     },
   ],
   shippingAddress: { type: String, required: true },

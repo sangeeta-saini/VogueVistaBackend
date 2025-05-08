@@ -122,29 +122,49 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const orders = await OrderModel.find().sort({ createdAt: -1 });
-    if (!orders) {
-      return res.json({
-        orders: [],
-      });
+    const orders = await OrderModel.find()
+      .sort({ createdAt: -1 })
+      .populate("shippingAddress");
+
+    if (!orders.length) {
+      return res.json({ orders: [] });
     }
-    let orderData = [];
+
+    const orderData = [];
+
     for (const order of orders) {
-      const itemsIds = getObjectIds(order.items);
-      const products = await ProductsModel.find({
-        _id: {
-          $in: itemsIds,
-        },
+      const items = order.items; // contains productId and quantity
+      const productIds = items.map((item) => new ObjectId(item.productId));
+
+      // Fetch product details
+      const products = await ProductsModel.find({ _id: { $in: productIds } });
+
+      // Merge product details with quantity
+      const detailedItems = products.map((product) => {
+        const matchingItem = items.find(
+          (item) => item.productId === product._id.toString()
+        );
+        const productItem = product.toObject();
+
+        return {
+          ...productItem,
+          quantity: matchingItem?.quantity || 0,
+        };
       });
+
       orderData.push({
-        items: products,
+        _id: order._id,
         status: order.status,
+        shippingAddress: order.shippingAddress,
+        paymentMethod: order.paymentMethod,
+        orderDate: order.orderDate,
+        items: detailedItems,
       });
     }
-    res.json({
-      orders: orderData,
-    });
+
+    res.json({ orders: orderData });
   } catch (err) {
+    console.error("Failed to fetch orders:", err);
     res.status(500).json({ error: err.message });
   }
 });
