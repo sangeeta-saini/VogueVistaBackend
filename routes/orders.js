@@ -107,7 +107,7 @@ router.post("/", async (req, res) => {
 
     const payload = {
       items,
-      status: "processing",
+      status: "Processing",
     };
     const newOrder = new OrderModel(payload);
     const savedOrder = await newOrder.save();

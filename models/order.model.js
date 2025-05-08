@@ -24,8 +24,8 @@ const OrderSchema = new schema({
   orderDate: { type: Date, default: Date.now },
   status: {
     type: String,
-    enum: ["processing", "shipped", "delivered", "cancelled"],
-    default: "processing",
+    enum: ["Processing", "Shipped", "Delivered", "Cancelled"],
+    default: "Processing",
   },
 });
 
