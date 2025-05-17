@@ -1,24 +1,24 @@
 import express from "express";
 import UserModel from "../models/user.model.js";
-import session from "express-session";
+// import session from "express-session";
 import passport from "passport";
 import LocalStrategy from "passport-local";
 
 const router = express.Router();
 
 // Session middleware
-router.use(
-  session({
-    secret: "keyboard cat",
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false, maxAge: 60000 },
-  })
-);
+// // router.use(
+// //   session({
+// //     secret: "keyboard cat",
+// //     resave: false,
+// //     saveUninitialized: true,
+// //     cookie: { secure: false, maxAge: 60000 },
+// //   })
+// );
 
 // Initialize passport
-router.use(passport.initialize());
-router.use(passport.session());
+// router.use(passport.initialize());
+// router.use(passport.session());
 
 // Passport local strategy
 passport.use(
