@@ -29,11 +29,6 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
-app.use("/", (req, res) => {
-  res.json({
-    ok: true,
-  });
-});
 
 app.use("/brands", BrandRoutes);
 
@@ -52,6 +47,12 @@ app.use("/wish", wishlistdata);
 app.use("/migrate", Migration);
 
 app.use("/categories", CategoryRoutes);
+
+app.get("/", (req, res) => {
+  res.json({
+    ok: true,
+  });
+});
 
 // const dbURL = process.env.MONGO_URI || "mongodb://localhost:27017/dbconnect";
 console.log("--- mongo connection string -", process.env.MONGO_URI);
