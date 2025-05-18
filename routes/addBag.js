@@ -93,8 +93,8 @@ router.put("/:productId", async (req, res) => {
   if (!productId) {
     return res.status(400).json({ error: "productId is required" });
   }
-  if (quantity < 1)
-    return res.status(400).json({ error: "Quantity must be at least 1" });
+  // if (quantity < 1)
+  //   return res.status(400).json({ error: "Quantity must be at least 1" });
 
   try {
     const userCart = await BagModel.findOne({ userId: user_id });
