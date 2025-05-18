@@ -47,9 +47,9 @@ app.use("/migrate", Migration);
 
 app.use("/categories", CategoryRoutes);
 
-const dbURL = process.env.MONGO_URI || "mongodb://localhost:27017/dbconnect";
+// const dbURL = process.env.MONGO_URI || "mongodb://localhost:27017/dbconnect";
 mongoose
-  .connect(dbURL)
+  .connect(process.env.MONGO_URI)
   .then((result) => {
     console.log("connection is sucessful");
   })
