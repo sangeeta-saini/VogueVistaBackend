@@ -3,7 +3,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server",
     "dev": "node --watch --env-file=.env server"
   },
   "dependencies": {
